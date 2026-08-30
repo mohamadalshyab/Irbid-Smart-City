@@ -74,25 +74,24 @@ with tab1:
     heat_data = [[lats[i], lons[i], float(predictions[i])] for i in range(150)]
     HeatMap(heat_data, radius=20, blur=15, max_zoom=1, gradient={0.4: 'green', 0.7: 'orange', 1.0: 'red'}).add_to(m)
     
-    # إحداثيات حقيقية ومصححة
+  # إحداثيات حقيقية ومصححة 100% لمدينة إربد
     if show_cameras:
         cameras = [
-            {"loc": [32.5180, 35.8530], "name": "كاميرا طريق الحصن", "speed": "80 كم/ساعة"},
-            {"loc": [32.5385, 35.8780], "name": "كاميرا شارع البتراء", "speed": "80 كم/ساعة"},
-            {"loc": [32.5420, 35.8515], "name": "إشارة الإسكان", "speed": "رادار إشارة ضوئية"}
+            {"loc": [32.5122, 35.8528], "name": "كاميرا طريق الحصن", "speed": "80 كم/ساعة"},
+            {"loc": [32.5401, 35.8821], "name": "كاميرا شارع البتراء", "speed": "80 كم/ساعة"},
+            {"loc": [32.5305, 35.8552], "name": "إشارة الإسكان", "speed": "رادار إشارة ضوئية"}
         ]
         for cam in cameras:
             folium.Marker(cam["loc"], popup=f"<b>{cam['name']}</b><br>السرعة: {cam['speed']}", icon=folium.Icon(color="red", icon="camera", prefix='fa')).add_to(m)
             
     if show_pois:
         pois = [
-            {"loc": [32.5332, 35.8576], "name": "أرابيلا مول", "type": "مركز تسوق"},
-            {"loc": [32.5150, 35.8520], "name": "إربد سيتي سنتر", "type": "مركز تسوق"},
-            {"loc": [32.5366, 35.8517], "name": "شارع الجامعة (بوابة الاقتصاد)", "type": "مطاعم وخدمات"}
+            {"loc": [32.5348, 35.8560], "name": "أرابيلا مول", "type": "مركز تسوق 🛍️"},
+            {"loc": [32.5186, 35.8523], "name": "إربد سيتي سنتر", "type": "مركز تسوق 🛍️"},
+            {"loc": [32.5385, 35.8533], "name": "شارع الجامعة (بوابة الاقتصاد)", "type": "مطاعم وخدمات 🍔"}
         ]
         for poi in pois:
             folium.Marker(poi["loc"], popup=f"<b>{poi['name']}</b><br>{poi['type']}", icon=folium.Icon(color="blue", icon="info-sign")).add_to(m)
-            
     st_folium(m, width=1200, height=550)
 
 with tab2:
