@@ -6,7 +6,6 @@ import folium
 from folium.plugins import HeatMap
 from streamlit_folium import st_folium
 
-# إعدادات الصفحة
 st.set_page_config(page_title="بوابة إربد الذكية", layout="wide", page_icon="🚦")
 
 st.markdown("""
@@ -31,7 +30,7 @@ def load_assets():
 
 model, le, df = load_assets()
 
-# القائمة الجانبية المتقدمة
+# القائمة الجانبية
 st.sidebar.title("إعدادات المحاكاة 🎛️")
 hour = st.sidebar.slider("اختر الساعة (نظام 24)", 6, 23, 14)
 weather = st.sidebar.selectbox("حالة الطقس", options=[0, 1, 2], format_func=lambda x: ["صافي ☀️", "غائم ☁️", "ماطر 🌧️"][x])
@@ -40,7 +39,7 @@ day_of_week = st.sidebar.selectbox("اليوم", options=[0,1,2,3,4,5,6], format
 st.sidebar.markdown("---")
 st.sidebar.title("طبقات الخريطة 🗺️")
 show_cameras = st.sidebar.checkbox("عرض كاميرات السرعة 📸", value=True)
-show_pois = st.sidebar.checkbox("عرض المولات والمطاعم 🛍️", value=True)
+show_pois = st.sidebar.checkbox("عرض المعالم الرئيسية 🛍️", value=True)
 
 is_weekend = 1 if day_of_week in [4, 5] else 0
 is_rush_hour = 1 if hour in [7, 8, 9, 14, 15, 16] else 0
@@ -53,8 +52,8 @@ col3.metric("حالة النظام", "متصل 🟢")
 
 st.markdown("<hr style='border: 1px solid #d3d3d3;'>", unsafe_allow_html=True)
 
-# تقسيم الواجهة إلى تبويبات احترافية
-tab1, tab2, tab3 = st.tabs(["🗺️ الخريطة التفاعلية", "📰 الأخبار والتنبيهات", "🤖 المساعد الحضري الذكي"])
+# التبويبات
+tab1, tab2, tab3 = st.tabs(["🗺️ الخريطة التفاعلية", "📰 التنبيهات المباشرة", "🤖 المساعد الحضري"])
 
 with tab1:
     sample_edges = df['edge_id_encoded'].unique()[:150] 
@@ -66,47 +65,84 @@ with tab1:
     
     predictions = model.predict(input_data)
     
-    m = folium.Map(location=[32.545, 35.855], zoom_start=13, tiles='OpenStreetMap')
+    # تحديث مركز الخريطة ليكون في قلب إربد بالضبط
+    m = folium.Map(location=[32.536, 35.855], zoom_start=14, tiles='OpenStreetMap')
     
-    # الخريطة الحرارية
     np.random.seed(42)
-    lats = np.random.uniform(32.52, 32.57, size=150)
+    lats = np.random.uniform(32.51, 32.56, size=150)
     lons = np.random.uniform(35.83, 35.88, size=150)
     heat_data = [[lats[i], lons[i], float(predictions[i])] for i in range(150)]
     HeatMap(heat_data, radius=20, blur=15, max_zoom=1, gradient={0.4: 'green', 0.7: 'orange', 1.0: 'red'}).add_to(m)
     
-    # إضافة كاميرات المراقبة
+    # إحداثيات حقيقية ومصححة
     if show_cameras:
         cameras = [
-            {"loc": [32.525, 35.865], "name": "كاميرا طريق الحصن", "speed": "80 كم/ساعة"},
-            {"loc": [32.548, 35.875], "name": "كاميرا شارع البتراء", "speed": "60 كم/ساعة"},
-            {"loc": [32.560, 35.850], "name": "إشارة الإسكان", "speed": "رادار إشارة ضوئية"}
+            {"loc": [32.5180, 35.8530], "name": "كاميرا طريق الحصن", "speed": "80 كم/ساعة"},
+            {"loc": [32.5385, 35.8780], "name": "كاميرا شارع البتراء", "speed": "80 كم/ساعة"},
+            {"loc": [32.5420, 35.8515], "name": "إشارة الإسكان", "speed": "رادار إشارة ضوئية"}
         ]
         for cam in cameras:
-            folium.Marker(
-                cam["loc"], 
-                popup=f"<b>{cam['name']}</b><br>السرعة: {cam['speed']}", 
-                icon=folium.Icon(color="red", icon="camera", prefix='fa')
-            ).add_to(m)
+            folium.Marker(cam["loc"], popup=f"<b>{cam['name']}</b><br>السرعة: {cam['speed']}", icon=folium.Icon(color="red", icon="camera", prefix='fa')).add_to(m)
             
-    # إضافة المولات والمطاعم
     if show_pois:
         pois = [
-            {"loc": [32.535, 35.865], "name": "أرابيلا مول", "type": "تسوق 🛍️"},
-            {"loc": [32.530, 35.850], "name": "إربد سيتي سنتر", "type": "تسوق 🛍️"},
-            {"loc": [32.540, 35.855], "name": "مطاعم شارع الجامعة", "type": "مطاعم 🍔"}
+            {"loc": [32.5332, 35.8576], "name": "أرابيلا مول", "type": "مركز تسوق"},
+            {"loc": [32.5150, 35.8520], "name": "إربد سيتي سنتر", "type": "مركز تسوق"},
+            {"loc": [32.5366, 35.8517], "name": "شارع الجامعة (بوابة الاقتصاد)", "type": "مطاعم وخدمات"}
         ]
         for poi in pois:
-            folium.Marker(
-                poi["loc"], 
-                popup=f"<b>{poi['name']}</b><br>{poi['type']}", 
-                icon=folium.Icon(color="blue", icon="info-sign")
-            ).add_to(m)
+            folium.Marker(poi["loc"], popup=f"<b>{poi['name']}</b><br>{poi['type']}", icon=folium.Icon(color="blue", icon="info-sign")).add_to(m)
             
     st_folium(m, width=1200, height=550)
 
 with tab2:
-    st.info("سيتم ربط هذا القسم لاحقاً مع واجهة الأخبار الحية (News API) لمدينة إربد.")
+    st.markdown("### 📰 شريط الأخبار والتنبيهات المرورية")
     
+    # نظام أخبار ذكي يتغير حسب المدخلات
+    if weather == 2:
+        st.error("🌧️ **عاجل:** تحذيرات من انزلاقات على طريق الحصن وشارع البتراء بسبب هطول الأمطار المستمر.")
+    elif weather == 1:
+        st.info("☁️ **حالة الطقس:** طقس غائم في إربد، حركة سير طبيعية في معظم الشوارع الرئيسية.")
+    else:
+        st.success("☀️ **حالة الطرق:** طقس صافٍ ومثالي للتنقل في جميع أنحاء المدينة.")
+        
+    if is_rush_hour:
+        st.warning("⚠️ **تنويه مروري:** نشهد حالياً أوقات الذروة. توقع ازدحام خانق قرب محيط جامعة اليرموك ومجمع عمان الجديد.")
+    elif hour > 21:
+        st.info("🌙 **حركة هادئة:** انسيابية عالية في حركة المرور متوقعة في معظم الشوارع التجارية.")
+        
+    st.markdown("---")
+    st.markdown("💡 **إعلان بلدية إربد:** أعمال صيانة وتعبيد مجدولة في شارع بغداد خلال عطلة نهاية الأسبوع، يرجى سلوك طرق بديلة.")
+
 with tab3:
-    st.info("سيتم ربط هذا القسم لاحقاً مع نموذج لغوي (LLM) للرد على استفسارات المستخدمين برمجياً.")
+    st.markdown("### 🤖 المساعد الحضري (Irbid Smart Agent)")
+    st.write("اطرح سؤالك لمعرفة حالة الطرق أو أفضل أوقات الخروج (الاستعلام يعتمد على ظروف المحاكاة الحالية).")
+    
+    user_query = st.text_input("مثال: هل أزمة عند الجامعة؟ أو كيف الوضع بمجمع عمان؟")
+    
+    if st.button("اسأل المساعد 🚀"):
+        if not user_query:
+            st.warning("الرجاء كتابة سؤال أولاً.")
+        else:
+            # خوارزمية تحليل نصوص مبسطة (NLP Logic)
+            query = user_query.lower()
+            if "جامعة" in query or "يرموك" in query:
+                if is_rush_hour:
+                    st.error("🤖 المساعد: نعم، المنطقة المحيطة بجامعة اليرموك تشهد أزمة خانقة الآن. أنصحك باستخدام شوارع فرعية من جهة الحي الجنوبي.")
+                else:
+                    st.success("🤖 المساعد: الطريق إلى جامعة اليرموك سالك وحركة السير طبيعية جداً في هذا الوقت.")
+            
+            elif "مطر" in query or "شتاء" in query:
+                if weather == 2:
+                    st.warning("🤖 المساعد: الجو ماطر حالياً، وهذا يزيد من احتمالية بطء السير بنسبة 20%. يرجى القيادة بحذر.")
+                else:
+                    st.info("🤖 المساعد: الطقس الحالي ليس ماطراً حسب الإعدادات، لا يوجد ما يدعو للقلق من الانزلاقات.")
+            
+            elif "مول" in query or "سيتي سنتر" in query or "ارابيلا" in query:
+                if is_weekend and hour > 16:
+                    st.error("🤖 المساعد: متوقع ازدحام شديد عند المولات لأن اليوم عطلة والوقت مسائي. يفضل تأجيل المشوار إن أمكن.")
+                else:
+                    st.success("🤖 المساعد: الطرق المؤدية للمولات سالكة حالياً، وقت ممتاز للتسوق.")
+            
+            else:
+                st.success("🤖 المساعد: بناءً على المعطيات الحالية والتنبؤات المرورية، لا توجد إغلاقات رئيسية أو حوادث في شبكة طرق إربد. رحلة آمنة!")
