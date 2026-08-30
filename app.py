@@ -30,16 +30,11 @@ def load_assets():
 
 model, le, df = load_assets()
 
-# القائمة الجانبية
+# القائمة الجانبية (بدون أزرار الكاميرات والمولات)
 st.sidebar.title("إعدادات المحاكاة 🎛️")
 hour = st.sidebar.slider("اختر الساعة (نظام 24)", 6, 23, 14)
 weather = st.sidebar.selectbox("حالة الطقس", options=[0, 1, 2], format_func=lambda x: ["صافي ☀️", "غائم ☁️", "ماطر 🌧️"][x])
 day_of_week = st.sidebar.selectbox("اليوم", options=[0,1,2,3,4,5,6], format_func=lambda x: ["الاثنين", "الثلاثاء", "الأربعاء", "الخميس", "الجمعة", "السبت", "الأحد"][x])
-
-st.sidebar.markdown("---")
-st.sidebar.title("طبقات الخريطة 🗺️")
-show_cameras = st.sidebar.checkbox("عرض كاميرات السرعة 📸", value=True)
-show_pois = st.sidebar.checkbox("عرض المعالم الرئيسية 🛍️", value=True)
 
 is_weekend = 1 if day_of_week in [4, 5] else 0
 is_rush_hour = 1 if hour in [7, 8, 9, 14, 15, 16] else 0
@@ -52,7 +47,7 @@ col3.metric("حالة النظام", "متصل 🟢")
 
 st.markdown("<hr style='border: 1px solid #d3d3d3;'>", unsafe_allow_html=True)
 
-# التبويبات
+# التبويبات الثلاثة
 tab1, tab2, tab3 = st.tabs(["🗺️ الخريطة التفاعلية", "📰 التنبيهات المباشرة", "🤖 المساعد الحضري"])
 
 with tab1:
@@ -65,7 +60,7 @@ with tab1:
     
     predictions = model.predict(input_data)
     
-    # تحديث مركز الخريطة ليكون في قلب إربد بالضبط
+    # خريطة حرارية نظيفة تماماً
     m = folium.Map(location=[32.536, 35.855], zoom_start=14, tiles='OpenStreetMap')
     
     np.random.seed(42)
@@ -74,30 +69,11 @@ with tab1:
     heat_data = [[lats[i], lons[i], float(predictions[i])] for i in range(150)]
     HeatMap(heat_data, radius=20, blur=15, max_zoom=1, gradient={0.4: 'green', 0.7: 'orange', 1.0: 'red'}).add_to(m)
     
-  # إحداثيات حقيقية ومصححة 100% لمدينة إربد
-    if show_cameras:
-        cameras = [
-            {"loc": [32.5122, 35.8528], "name": "كاميرا طريق الحصن", "speed": "80 كم/ساعة"},
-            {"loc": [32.5401, 35.8821], "name": "كاميرا شارع البتراء", "speed": "80 كم/ساعة"},
-            {"loc": [32.5305, 35.8552], "name": "إشارة الإسكان", "speed": "رادار إشارة ضوئية"}
-        ]
-        for cam in cameras:
-            folium.Marker(cam["loc"], popup=f"<b>{cam['name']}</b><br>السرعة: {cam['speed']}", icon=folium.Icon(color="red", icon="camera", prefix='fa')).add_to(m)
-            
-    if show_pois:
-        pois = [
-            {"loc": [32.5348, 35.8560], "name": "أرابيلا مول", "type": "مركز تسوق 🛍️"},
-            {"loc": [32.5186, 35.8523], "name": "إربد سيتي سنتر", "type": "مركز تسوق 🛍️"},
-            {"loc": [32.5385, 35.8533], "name": "شارع الجامعة (بوابة الاقتصاد)", "type": "مطاعم وخدمات 🍔"}
-        ]
-        for poi in pois:
-            folium.Marker(poi["loc"], popup=f"<b>{poi['name']}</b><br>{poi['type']}", icon=folium.Icon(color="blue", icon="info-sign")).add_to(m)
     st_folium(m, width=1200, height=550)
 
 with tab2:
     st.markdown("### 📰 شريط الأخبار والتنبيهات المرورية")
     
-    # نظام أخبار ذكي يتغير حسب المدخلات
     if weather == 2:
         st.error("🌧️ **عاجل:** تحذيرات من انزلاقات على طريق الحصن وشارع البتراء بسبب هطول الأمطار المستمر.")
     elif weather == 1:
@@ -123,7 +99,6 @@ with tab3:
         if not user_query:
             st.warning("الرجاء كتابة سؤال أولاً.")
         else:
-            # خوارزمية تحليل نصوص مبسطة (NLP Logic)
             query = user_query.lower()
             if "جامعة" in query or "يرموك" in query:
                 if is_rush_hour:
