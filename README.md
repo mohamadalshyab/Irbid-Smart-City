@@ -16,7 +16,7 @@ An end-to-end AI platform that predicts traffic congestion levels across the str
 
 ## 🚀 Live Demo
 Experience the interactive dashboard here: 
-[Insert your Streamlit app link here]
+[[Insert your Streamlit app link here](https://irbid-smart-city-au7gyqb3zedqnrpmjvykgp.streamlit.app/)]
 
 ---
 **Developer:**
